@@ -386,6 +386,29 @@ def virtual_memory():
     it's more accurate.
     That matches "available" column in newer versions of "free".
     """
+
+    # XXX(db)
+    with open('/sys/fs/cgroup/memory/memory.limit_in_bytes') as f:
+        total = int(f.read())
+    with open('/sys/fs/cgroup/memory/memory.usage_in_bytes') as f:
+        used = int(f.read())
+    free = total - used
+    available = free
+    percent = usage_percent((total - available), total, _round=1)
+    return svmem(
+        total=total,
+        available=available,
+        percent=percent,
+        used=used,
+        free=free,
+        active=0,
+        inactive=0,
+        buffers=0,
+        cached=0,
+        shared=0,
+    )
+    # XXX(db)
+
     missing_fields = []
     mems = {}
     with open_binary('%s/meminfo' % get_procfs_path()) as f:
